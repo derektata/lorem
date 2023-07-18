@@ -10,7 +10,9 @@ lorem is a Go utility library for generating Lorem Ipsum text.
   - [X] - Customize the chance of a comma being added to a sentence
 - [X] - Build simple CLI
 - [ ] - Build Neovim Plugin
-  - [ ] - Create ':LoremIpsum' command w/ args
+  - [ ] - Bootstrap binary for Neovim Plugin
+  - [X] - Create ':LoremIpsum' command w/ args
+  - [X] - Tab completion between words and paragraphs
   - [ ] - Integrate with completion engine
 - [ ] - Write out unit tests for library
   - [X] - Write out tests for Generator
@@ -25,7 +27,7 @@ To install the library, run the following command:
 go get -u github.com/derektata/lorem
 ```
 
-If you would like the CLI, grab the latest release from the [Latest Releases](https://github.com/derektata/lorem/releases).
+If you would like the CLI, grab the latest release from the [Latest Releases][Latest Release].
 
 ## Usage as a library
 
@@ -65,6 +67,29 @@ Examples:
   $ lorem -w 500
 ```
 
+## Usage as a Neovim Plugin
+
+Make sure you have the binary from the [Latest Releases][Latest Release] in your PATH, then:
+
+Installing the plugin via Lazy:
+```lua
+{ 
+  "derektata/lorem",
+  config = function()
+    require("lorem")
+  end
+},
+```
+
+Usage in Editor:
+```
+:LoremIpsum 5 <tab>
+```
+
+<img src="docs/complete.png">
+
 ## License
 
 MIT License
+
+[Latest Release]: https://github.com/derektata/lorem/releases
