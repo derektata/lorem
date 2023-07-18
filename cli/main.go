@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	words      = pflag.IntP("words", "w", 100, "number of words to generate")
+	words      = pflag.IntP("words", "w", 0, "number of words to generate")
 	paragraphs = pflag.IntP("paragraphs", "p", 0, "number of paragraphs to generate")
 )
 
