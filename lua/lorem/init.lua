@@ -1,44 +1,34 @@
--- TODO: Booststrap Code
+-- shell script to grab the latest release from github and install it.
+local install_script = [[
 
---[[
+os_name="$(uname -s)"
+os_arch="$(uname -m)"
 
-local getOSAndArch = function()
-	local os_name = "Unknown OS"
-	local os_arch = "Unknown Architecture"
+case "$os_name" in
+    "Darwin"|"Linux") latest_release_file="lorem_${os_name}_$os_arch.tar.gz";;
+    "Windows") latest_release_file="lorem_${os_name}_$os_arch.zip";;
+    *) echo "Unsupported OS: $os_name"; exit 1 ;;
+esac
 
-	local capture_output = function(command)
-		local file = io.popen(command)
-		if file then
-			local output = file:read("*l")
-			file:close()
-			return output
-		end
-		return nil
-	end
+curl -s -L -o "$latest_release_file" $(curl -s https://api.github.com/repos/derektata/lorem/releases/latest \
+    | grep 'browser_' \
+    | cut -d\" -f4 \
+    | grep "$os_name" \
+    | grep "$os_arch")
 
-	os_name = capture_output("uname -s") or os_name
-	os_arch = capture_output("uname -m") or os_arch
+case "$os_name" in
+    "Darwin"|"Linux") tar -xzf "$latest_release_file" ;;
+    "Windows") unzip "$latest_release_file" ;;
+esac
 
-	return os_name, os_arch
-end
-
-local os_name, os_arch = getOSAndArch()
-
-local tag_name = "v0.0.1"
-
-local url = "https://github.com/derektata/lorem/releases/download/" .. tag_name .. "/lorem_"
-
-local getDownloadURL = function()
-	if os_name == "Windows" or os_name == "Linux" or os_name == "Darwin" then
-		local extension = (os_name == "Windows") and ".zip" or ".tar.gz"
-		return url .. os_name .. "_" .. os_arch .. extension
-		-- e.g. lorem_Darwin_arm64.tar.gz or lorem_Windows_x86_64.zip
-	end
-end
-
+rm "$latest_release_file"
 ]]
 
 local M = {}
+
+-- function M.bootstrap()
+-- 	vim.fn.system(install_script)
+-- end
 
 --@param args table
 --@param amount number
@@ -83,13 +73,5 @@ function M.lorem_complete(arg_lead)
 	end
 	return filtered_opts
 end
-
-vim.cmd([[
-    function! LoremCompleteCmd(ArgLead, CmdLine, CursorPos)
-        return luaeval('require("lorem").lorem_complete(_A)', a:ArgLead)
-    endfunction
-
-    command! -nargs=* -complete=customlist,LoremCompleteCmd LoremIpsum lua require("lorem").generate(<f-args>)
-]])
 
 return M
