@@ -88,6 +88,8 @@ Usage in Editor:
 
 <img src="docs/complete.png">
 
+<img src="docs/lorem-plugin.gif">
+
 ## License
 
 MIT License
