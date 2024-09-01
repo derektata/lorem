@@ -1,3 +1,4 @@
+// ipsum/ipsum.go
 package lorem
 
 var Words = []string{
