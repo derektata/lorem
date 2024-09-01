@@ -1,7 +1,10 @@
+// ipsum/main.go
 package lorem
 
 import (
 	"math/rand"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,170 +15,164 @@ import (
 const (
 	WordsPerSentence      = 10
 	SentencesPerParagraph = 5
-	CommaAddChance        = 2
 )
 
 type Generator struct {
 	Words                 []string
 	WordsPerSentence      int
 	SentencesPerParagraph int
-	CommaAddChance        int
+	shuffleFunc           func([]string)
 	r                     *rand.Rand
 }
 
-// NewGenerator creates a new instance of the Generator struct.
+type Config struct {
+	Words      int
+	Paragraphs int
+}
+
+// getEnvInt returns the integer value of the environment variable
+// specified by envVar. If the environment variable is not set, or its
+// value is not a valid integer, it returns defaultValue.
+func getEnvInt(envVar string, defaultValue int) int {
+	if val, ok := os.LookupEnv(envVar); ok {
+		if intValue, err := strconv.Atoi(val); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
+
+// NewGenerator returns a new Generator with default values set.
 //
-// No parameters are required.
+// The generator can be customized by setting the following environment variables:
 //
-// It returns a pointer to a Generator.
+// - WORDS_PER_SENTENCE: The number of words per sentence.
+// - SENTENCES_PER_PARAGRAPH: The number of sentences per paragraph.
+//
+// If the environment variables are not set, the generator will use the default values.
 func NewGenerator() *Generator {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return &Generator{
 		Words:                 Words,
-		WordsPerSentence:      WordsPerSentence,
-		SentencesPerParagraph: SentencesPerParagraph,
-		CommaAddChance:        CommaAddChance,
-		r:                     rand.New(rand.NewSource(time.Now().UnixNano())),
+		WordsPerSentence:      getEnvInt("WORDS_PER_SENTENCE", 10),
+		SentencesPerParagraph: getEnvInt("SENTENCES_PER_PARAGRAPH", 5),
+		r:                     r,
+		shuffleFunc: func(words []string) {
+			r.Shuffle(len(words), func(i, j int) { words[i], words[j] = words[j], words[i] })
+		},
 	}
 }
 
-// shuffleWords shuffles the words in the Generator.
+// processWord capitalizes the first word in the sentence.
 //
-// No parameters.
+// The function takes two parameters:
 //
-// No return values.
-func (g *Generator) shuffleWords() {
-	g.r.Shuffle(len(g.Words), func(i, j int) {
-		g.Words[i], g.Words[j] = g.Words[j], g.Words[i]
-	})
-}
-
-// capitalizeWord capitalizes the given word.
-func (g *Generator) capitalizeWord(word string) string {
-	word = cases.Title(language.English).String(word)
-	return word
-}
-
-// addCommaToWord adds a comma to a word based on certain conditions.
-//
-// Parameters:
-//
-// - word: the word to which the comma is to be added (string)
-//
-// - wordCount: the count of words in the sentence (int)
-//
-// Returns:
-//
-// - a string containing the word with a comma added.
-func (g *Generator) addCommaToWord(word string, wordCount int) string {
-	if wordCount%g.WordsPerSentence != 0 && wordCount%g.WordsPerSentence < 5 && g.r.Intn(g.CommaAddChance) == 0 {
-		word += ","
-	}
-
-	return word
-}
-
-// buildSentence generates a sentence by shuffling words and adding punctuation.
-//
-// Parameter:
-//
-// - n : is the length of the sentence in words.
+// - word: the word to process
+// - wordCount: the position of the word in the sentence
 //
 // Return:
 //
-// - a string containing the generated sentence.
+// - the processed word
+func (g *Generator) processWord(word string, wordCount int) string {
+	// Capitalize the first word in the sentence
+	if wordCount == 1 {
+		return cases.Title(language.English).String(word)
+	}
+	return word
+}
+
+// buildSentence generates a sentence by shuffling the words and adding
+// punctuation.
+//
+// The function shuffles the words in the sentence before constructing the
+// sentence. Then it builds the sentence by repeatedly calling processWord to add
+// the words to the sentence. The function returns a string containing the
+// generated sentence.
 func (g *Generator) buildSentence(n int) string {
-	g.shuffleWords()
-	var sb strings.Builder
+	// Shuffle words before constructing the sentence
+	g.shuffleFunc(g.Words)
 
-	for i := 0; i < n; i += g.WordsPerSentence {
-		for j := 0; j < g.WordsPerSentence && i+j < n; j++ {
-			word := g.Words[(i+j)%len(g.Words)]
-
-			// Capitalize the first word of the sentence
-			if j == 0 {
-				word = g.capitalizeWord(word)
-			}
-
-			// Add a comma to the word
-			word = g.addCommaToWord(word, j+1)
-
-			sb.WriteString(" ")
-			sb.WriteString(word)
-		}
-
-		if i < n-g.WordsPerSentence {
-			sb.WriteString(". ")
-		} else {
-			sb.WriteString(".")
-		}
-	}
-
-	return strings.TrimSpace(sb.String())
-}
-
-// buildParagraph generates a paragraph of text.
-//
-// It builds the paragraph by repeatedly calling the buildSentence function to
-// generate sentences. The number of sentences per paragraph is determined by
-// the SentencesPerParagraph field of the Generator struct that the function is
-// called on. The sentences are then concatenated using a strings.Builder and
-// returned as a single string.
-//
-// No parameters are required for this function.
-//
-// The function returns a string, which represents the generated paragraph.
-func (g *Generator) buildParagraph() string {
-	var sb strings.Builder
-
-	for i := 0; i < g.SentencesPerParagraph; i++ {
-		sentence := g.buildSentence(g.WordsPerSentence)
-
-		sb.WriteString(" ")
-		sb.WriteString(sentence)
-	}
-
-	return strings.TrimSpace(sb.String())
-}
-
-// Generate generates a sentence using the Generator struct.
-//
-// Parameter:
-//
-// - n: the number of words in the sentence.
-//
-// Return:
-//
-// - a string containing the generated sentence.
-func (g *Generator) Generate(n int) string {
-	// Build the sentence
-	sentence := g.buildSentence(n)
-
-	return sentence
-}
-
-// GenerateParagraphs generates n paragraphs and returns them as a string.
-//
-// Parameter:
-//
-// - n: the number of paragraphs to generate.
-//
-// Return:
-//
-// - a string containing the generated paragraphs.
-func (g *Generator) GenerateParagraphs(n int) string {
 	var sb strings.Builder
 
 	for i := 0; i < n; i++ {
-		// Build the paragraph
-		paragraph := g.buildParagraph()
+		word := g.Words[i%len(g.Words)]
+		word = g.processWord(word, i+1)
 
-		// Add a space between paragraphs
+		if i > 0 {
+			sb.WriteString(" ")
+		}
+
+		sb.WriteString(word)
+
+		// Add a sporadic comma after the word if it's not the last word in the sentence
+		if i < n-1 && g.r.Float64() < 0.3 { // 30% chance of adding a comma
+			sb.WriteString(",")
+		}
+	}
+
+	// Add a period at the end of the sentence
+	sb.WriteString(".")
+	return sb.String()
+}
+
+// buildParagraph generates a paragraph by repeatedly calling the buildSentence
+// function to generate sentences. The sentences are then concatenated using a
+// strings.Builder and returned as a single string.
+//
+// The function builds the paragraphs by repeatedly calling the buildSentence
+// function to generate sentences. The sentences are then concatenated using a
+// strings.Builder and returned as a single string.
+func (g *Generator) buildParagraph() string {
+	var sb strings.Builder
+	for i := 0; i < g.SentencesPerParagraph; i++ {
+		if i > 0 {
+			sb.WriteString(" ")
+		}
+		sb.WriteString(g.buildSentence(g.WordsPerSentence))
+	}
+	return sb.String()
+}
+
+// Generate generates n words of Lorem Ipsum text.
+//
+// The function builds the text by calling buildSentence with the provided number of words.
+// The function returns a string containing the generated Lorem Ipsum text.
+func (g *Generator) Generate(n int) string {
+	return g.buildSentence(n)
+}
+
+// GenerateParagraphs generates n paragraphs of Lorem Ipsum text.
+//
+// The function builds the paragraphs by repeatedly calling the buildParagraph
+// function to generate paragraphs. The paragraphs are then concatenated using a
+// strings.Builder and returned as a single string.
+func (g *Generator) GenerateParagraphs(n int) string {
+	var sb strings.Builder
+	for i := 0; i < n; i++ {
 		if i > 0 {
 			sb.WriteString("\n\n")
 		}
-
-		sb.WriteString(paragraph)
+		sb.WriteString(g.buildParagraph())
 	}
-
 	return sb.String()
+}
+
+// GenerateIpsum generates Lorem Ipsum text based on the given configuration.
+//
+// The function takes a config struct as a parameter.
+// The config struct contains the following fields:
+//
+// - paragraphs: the number of paragraphs to generate (if greater than 0).
+//
+// - words: the number of words to generate (if greater than 0).
+//
+// The function returns a string containing the generated Lorem Ipsum text.
+func GenerateIpsum(c Config) string {
+	g := NewGenerator()
+	if c.Paragraphs > 0 {
+		return g.GenerateParagraphs(c.Paragraphs)
+	} else if c.Words > 0 {
+		return g.Generate(c.Words)
+	}
+	return ""
 }
