@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>ipsum: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/derektata/lorem/ipsum/main.go (100.0%)</option>
+				
+				<option value="file1">github.com/derektata/lorem/main.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">// ipsum/main.go
+package lorem
+
+import (
+        "math/rand"
+        "os"
+        "strconv"
+        "strings"
+        "time"
+
+        "golang.org/x/text/cases"
+        "golang.org/x/text/language"
+)
+
+const (
+        WordsPerSentence      = 10
+        SentencesPerParagraph = 5
+)
+
+type Generator struct {
+        Words                 []string
+        WordsPerSentence      int
+        SentencesPerParagraph int
+        shuffleFunc           func([]string)
+        r                     *rand.Rand
+}
+
+type Config struct {
+        Words      int
+        Paragraphs int
+}
+
+// getEnvInt returns the integer value of the environment variable
+// specified by envVar. If the environment variable is not set, or its
+// value is not a valid integer, it returns defaultValue.
+func getEnvInt(envVar string, defaultValue int) int <span class="cov3" title="13">{
+        if val, ok := os.LookupEnv(envVar); ok </span><span class="cov1" title="2">{
+                if intValue, err := strconv.Atoi(val); err == nil </span><span class="cov1" title="1">{
+                        return intValue
+                }</span>
+        }
+        <span class="cov3" title="12">return defaultValue</span>
+}
+
+// NewGenerator returns a new Generator with default values set.
+//
+// The generator can be customized by setting the following environment variables:
+//
+// - WORDS_PER_SENTENCE: The number of words per sentence.
+// - SENTENCES_PER_PARAGRAPH: The number of sentences per paragraph.
+//
+// If the environment variables are not set, the generator will use the default values.
+func NewGenerator() *Generator <span class="cov2" title="5">{
+        r := rand.New(rand.NewSource(time.Now().UnixNano()))
+        return &amp;Generator{
+                Words:                 Words,
+                WordsPerSentence:      getEnvInt("WORDS_PER_SENTENCE", 10),
+                SentencesPerParagraph: getEnvInt("SENTENCES_PER_PARAGRAPH", 5),
+                r:                     r,
+                shuffleFunc: func(words []string) </span><span class="cov3" title="17">{
+                        r.Shuffle(len(words), func(i, j int) </span><span class="cov10" title="7986">{ words[i], words[j] = words[j], words[i] }</span>)
+                },
+        }
+}
+
+// processWord capitalizes the first word in the sentence.
+//
+// The function takes two parameters:
+//
+// - word: the word to process
+// - wordCount: the position of the word in the sentence
+//
+// Return:
+//
+// - the processed word
+func (g *Generator) processWord(word string, wordCount int) string <span class="cov6" title="289">{
+        // Capitalize the first word in the sentence
+        if wordCount == 1 </span><span class="cov4" title="44">{
+                return cases.Title(language.English).String(word)
+        }</span>
+        <span class="cov6" title="245">return word</span>
+}
+
+// buildSentence generates a sentence by shuffling the words and adding
+// punctuation.
+//
+// The function shuffles the words in the sentence before constructing the
+// sentence. Then it builds the sentence by repeatedly calling processWord to add
+// the words to the sentence. The function returns a string containing the
+// generated sentence.
+func (g *Generator) buildSentence(n int) string <span class="cov4" title="43">{
+        // Shuffle words before constructing the sentence
+        g.shuffleFunc(g.Words)
+
+        var sb strings.Builder
+
+        for i := 0; i &lt; n; i++ </span><span class="cov6" title="286">{
+                word := g.Words[i%len(g.Words)]
+                word = g.processWord(word, i+1)
+
+                if i &gt; 0 </span><span class="cov6" title="243">{
+                        sb.WriteString(" ")
+                }</span>
+
+                <span class="cov6" title="286">sb.WriteString(word)
+
+                // Add a sporadic comma after the word if it's not the last word in the sentence
+                if i &lt; n-1 &amp;&amp; g.r.Float64() &lt; 0.3 </span><span class="cov5" title="64">{ // 30% chance of adding a comma
+                        sb.WriteString(",")
+                }</span>
+        }
+
+        // Add a period at the end of the sentence
+        <span class="cov4" title="43">sb.WriteString(".")
+        return sb.String()</span>
+}
+
+// buildParagraph generates a paragraph by repeatedly calling the buildSentence
+// function to generate sentences. The sentences are then concatenated using a
+// strings.Builder and returned as a single string.
+//
+// The function builds the paragraphs by repeatedly calling the buildSentence
+// function to generate sentences. The sentences are then concatenated using a
+// strings.Builder and returned as a single string.
+func (g *Generator) buildParagraph() string <span class="cov3" title="10">{
+        var sb strings.Builder
+        for i := 0; i &lt; g.SentencesPerParagraph; i++ </span><span class="cov4" title="36">{
+                if i &gt; 0 </span><span class="cov4" title="26">{
+                        sb.WriteString(" ")
+                }</span>
+                <span class="cov4" title="36">sb.WriteString(g.buildSentence(g.WordsPerSentence))</span>
+        }
+        <span class="cov3" title="10">return sb.String()</span>
+}
+
+// Generate generates n words of Lorem Ipsum text.
+//
+// The function builds the text by calling buildSentence with the provided number of words.
+// The function returns a string containing the generated Lorem Ipsum text.
+func (g *Generator) Generate(n int) string <span class="cov2" title="4">{
+        return g.buildSentence(n)
+}</span>
+
+// GenerateParagraphs generates n paragraphs of Lorem Ipsum text.
+//
+// The function builds the paragraphs by repeatedly calling the buildParagraph
+// function to generate paragraphs. The paragraphs are then concatenated using a
+// strings.Builder and returned as a single string.
+func (g *Generator) GenerateParagraphs(n int) string <span class="cov2" title="5">{
+        var sb strings.Builder
+        for i := 0; i &lt; n; i++ </span><span class="cov3" title="8">{
+                if i &gt; 0 </span><span class="cov2" title="3">{
+                        sb.WriteString("\n\n")
+                }</span>
+                <span class="cov3" title="8">sb.WriteString(g.buildParagraph())</span>
+        }
+        <span class="cov2" title="5">return sb.String()</span>
+}
+
+// GenerateIpsum generates Lorem Ipsum text based on the given configuration.
+//
+// The function takes a config struct as a parameter.
+// The config struct contains the following fields:
+//
+// - paragraphs: the number of paragraphs to generate (if greater than 0).
+//
+// - words: the number of words to generate (if greater than 0).
+//
+// The function returns a string containing the generated Lorem Ipsum text.
+func GenerateIpsum(c Config) string <span class="cov2" title="4">{
+        g := NewGenerator()
+        if c.Paragraphs &gt; 0 </span><span class="cov1" title="2">{
+                return g.GenerateParagraphs(c.Paragraphs)
+        }</span> else<span class="cov1" title="2"> if c.Words &gt; 0 </span><span class="cov1" title="1">{
+                return g.Generate(c.Words)
+        }</span>
+        <span class="cov1" title="1">return ""</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// main.go
+package main
+
+import (
+        "fmt"
+
+        lorem "github.com/derektata/lorem/ipsum"
+        flag "github.com/spf13/pflag"
+)
+
+var (
+        words      = flag.IntP("words", "w", 0, "number of words to generate")
+        paragraphs = flag.IntP("paragraphs", "p", 0, "number of paragraphs to generate")
+)
+
+func main() <span class="cov0" title="0">{
+        flag.Parse()
+
+        c := lorem.Config{Words: *words, Paragraphs: *paragraphs}
+        result := lorem.GenerateIpsum(c)
+        fmt.Println(result)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
