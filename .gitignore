@@ -1,2 +1,4 @@
-lorem
-dist/
+.DS_Store
+/build
+test.sh
+ISSUE*
