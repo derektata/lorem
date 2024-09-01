@@ -43,7 +43,6 @@ func main() {
     g := lorem.NewGenerator()
     g.WordsPerSentence = 10 // Customize how many words per sentence
     g.SentencesPerParagraph = 5 // Customize how many sentences per paragraph
-    g.CommaAddChance = 3 // Customize the chance of a comma being added to a sentence
 
     // Generate words
     words := g.Generate(100)
@@ -73,22 +72,33 @@ Make sure you have the binary from the [Latest Releases][Latest Release] in your
 
 Installing the plugin via Lazy:
 ```lua
-{ 
-  "derektata/lorem",
-  config = function()
-    require("lorem")
-  end
-},
+-- plugins/lorem.lua
+return {
+	"derektata/lorem",
+	dependencies = { "nvim-lua/plenary.nvim" }, -- Ensure Plenary is a dependency
+	build = require("lorem").build(),
+	config = function()
+		require("lorem").setup({
+			WordsPerSentence = 8, 		  -- Default is 10
+			SentencesPerParagraph = 4, 	-- Default is 5
+		})
+
+		-- Optionally, bind a key to generate lorem ipsum text
+		vim.api.nvim_set_keymap("n", "<leader>li", ":LoremIpsum words 100<CR>", { noremap = true, silent = true })
+	end,
+	lazy = true, -- Load the plugin lazily
+	cmd = "LoremIpsum", -- Load the plugin when the LoremIpsum command is used
+}
 ```
 
 Usage in Editor:
 ```
-:LoremIpsum 5 <tab>
+:LoremIpsum <tab>
 ```
 
-<img src="docs/complete.png">
+<img src=".github/complete.png">
 
-<img src="docs/lorem-plugin.gif">
+<img src=".github/lorem-plugin.gif">
 
 ## License
 
