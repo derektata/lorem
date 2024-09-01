@@ -1,9 +1,22 @@
+// main.go
 package main
 
 import (
-	"github.com/derektata/lorem/cli"
+	"fmt"
+
+	lorem "github.com/derektata/lorem/ipsum"
+	flag "github.com/spf13/pflag"
+)
+
+var (
+	words      = flag.IntP("words", "w", 0, "number of words to generate")
+	paragraphs = flag.IntP("paragraphs", "p", 0, "number of paragraphs to generate")
 )
 
 func main() {
-	cli.Run()
+	flag.Parse()
+
+	c := lorem.Config{Words: *words, Paragraphs: *paragraphs}
+	result := lorem.GenerateIpsum(c)
+	fmt.Println(result)
 }
