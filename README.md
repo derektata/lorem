@@ -86,9 +86,9 @@ Usage in Editor:
 :LoremIpsum 5 <tab>
 ```
 
-<img src="docs/complete.png">
+<img src=".github/complete.png">
 
-<img src="docs/lorem-plugin.gif">
+<img src=".github/lorem-plugin.gif">
 
 ## License
 
